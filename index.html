@@ -137,6 +137,8 @@
   .drop-menu{position:absolute;top:calc(100% + 12px);left:-18px;min-width:230px;background:#1C1C1F;
       border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;display:none;
       box-shadow:0 20px 50px rgba(0,0,0,.4)}
+  /* невидимый мостик через зазор кнопка↔меню: без него hover слетает по дороге */
+  .drop-menu::before{content:"";position:absolute;left:-14px;right:-14px;top:-13px;height:13px}
   .drop-menu a{display:block;padding:10px 14px;border-radius:9px;font-size:14.5px}
   .drop-menu a:hover{background:rgba(255,255,255,.06);color:#fff}
   .drop-menu a span{display:block;font-size:12px;color:var(--ink-dim);margin-top:2px}
