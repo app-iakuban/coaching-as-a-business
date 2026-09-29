@@ -5,6 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <base href="/coaching-as-a-business/">
 <link rel="canonical" href="https://iakuban.com/coaching-as-a-business/">
+<!-- Атрибуция партнёра и код источника для Telegram-CTA (22.09.2026).
+
+     Решение встречи по партнёрской программе: реферальная ссылка «Профессии
+     коуч» ведёт не сразу в личку команды, а сюда — человек читает программу,
+     а партнёр закрепляется за ним ещё до первого сообщения. Отсюда две вещи:
+
+     1. `?ref=<КОД>` кладётся в cookie `iak_ref` first-touch на `.iakuban.com`
+        (та же схема, что на платформе и на /first-session/) — если человек
+        потом зарегистрируется, он встанет под этого партнёра;
+     2. точный код источника (`?src=AMB-<КОД>-<ПЛОЩАДКА>`, его даёт платформа
+        в короткой ссылке `/p/<CODE>`) дописывается в текст сообщения команде:
+        «… Мой код: AMB-LARINA-TG». Схема входа в воронку от этого не меняется
+        — Marketing/scenarios/pk_funnel_entry.md, ветка pk_onboarding.
+
+     Скрипт стоит в <head> ДО общей шапки не случайно: код визита («Визит №» /
+     «Заявка №») дописывает `shared/header/header.js`, и метку он выбирает по
+     наличию «Мой код:». Его слушатель DOMContentLoaded регистрируется позже
+     нашего, поэтому наш код успевает встать первым и «Заявка №» (стоп-слово
+     автоответчика) на партнёрские переходы больше не попадает.
+
+     Органический трафик лендинга кода не получает и ведёт себя как раньше:
+     заводить `SITE-COACHBUSINESS` — отдельное решение агента Sales. -->
+<script>
+(function(){
+ function rc(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;}
+ function wc(n,v){var h=location.hostname,m=h.match(/iakuban\.(com|org)$/),d=m?'; domain=.iakuban.'+m[1]:'';
+  document.cookie=n+'='+encodeURIComponent(v)+'; max-age=15552000; path=/; samesite=lax'+d;}
+ function rl(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+ function wl(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+ window.iakGetRef=function(){
+  var q=new URLSearchParams(location.search).get('ref');
+  if(q){ if(!rc('iak_ref'))wc('iak_ref',q); if(!rl('iak_ref'))wl('iak_ref',q); }
+  return rc('iak_ref')||rl('iak_ref')||q||null;
+ };
+ window.iakGetRef();
+
+ /* Код источника: сначала точный из ?src= (в нём зашита площадка — TG, DM,
+    BIO, REELS, STORIES), потом он же из sessionStorage (человек погулял по
+    якорям и потерял query), в конце — собранный из ref, если ссылку дали
+    без src. Ничего не подошло — возвращаем null и тексты не трогаем. */
+ function pkCode(){
+  var raw=(new URLSearchParams(location.search).get('src')||'').toUpperCase();
+  if(/^AMB-[A-Z0-9]{2,16}(?:-[A-Z0-9]{1,16})?$/.test(raw)){
+   try{sessionStorage.setItem('iakPkSrc',raw);}catch(e){}
+   return raw;
+  }
+  try{var saved=sessionStorage.getItem('iakPkSrc'); if(saved) return saved;}catch(e){}
+  var ref=(window.iakGetRef()||'').toUpperCase();
+  if(/^[A-Z0-9]{3,16}$/.test(ref)) return 'AMB-'+ref+'-SITE';
+  /* Органика лендинга (22.09.2026). Раньше здесь возвращался null: текст кнопки
+     оставался без кода, общий header.js подписывал его «Заявка №», а «заявк» стоит
+     в PK_EXCLUDE_RE — автоответчик на этих людей молчал, и они ждали менеджера.
+     Но человек, пришедший на страницу «Профессии коуч» и нажавший кнопку, — ровно
+     тот, для кого ветка pk_onboarding и сделана. Даём ему код страницы, как
+     предписывает Marketing/scenarios/pk_funnel_entry.md для SITE-*. */
+  return 'SITE-COACHBUSINESS';
+ }
+ window.iakPkCode=pkCode;
+
+ function decorate(){
+  var code=pkCode(); if(!code) return;
+  var links=document.querySelectorAll('a[href^="https://t.me/iakuban_team"]');
+  for(var i=0;i<links.length;i++){
+   try{
+    var u=new URL(links[i].href), t=u.searchParams.get('text')||'';
+    if(!t||t.indexOf('Мой код:')!==-1||t.indexOf('Заявка №')!==-1||t.indexOf('Визит №')!==-1) continue;
+    var base=t.replace(/\s+$/,'');
+    if(!/[.!?]$/.test(base)) base+='.';
+    links[i].href=u.origin+u.pathname+'?text='+encodeURIComponent(base+' Мой код: '+code);
+   }catch(e){}
+  }
+ }
+ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',decorate);
+ else decorate();
+})();
+</script>
 <!-- Consent Mode v2: по умолчанию всё denied, согласием управляет CookieHub (explicit opt-in) -->
 <script>
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
@@ -1250,7 +1326,8 @@ gtag('config','AW-17650633966');
  <div class="foot-col">
  <b>Юридическая информация</b>
  <a href="https://iakuban.com/legal/privacy-policy">Политика конфиденциальности</a><br>
- <a href="https://iakuban.com/legal/offer-agreement">Договор оферты</a><br>
+ <a href="https://iakuban.com/legal/education-offer">Оферта на обучение</a><br>
+ <a href="https://iakuban.com/legal/offer-agreement">Договор оферты на предоставление услуг платформы</a><br>
  <a href="https://iakuban.com/legal/terms-of-use">Условия использования</a><br>
  <a href="https://iakuban.com/legal/code-of-conduct">Кодекс поведения для коучей</a>
  </div>
