@@ -2,6 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<!-- Ближайший тренинг-день «Профессии коуч» подставляет nginx сервера лендингов (SSI) из платформы:
+     GET api.iakuban.com/api/v1/pk-cohorts/next/<поле>, источник — backend/app/services/pk_cohorts.py (COHORTS).
+     После конца тренинг-дня страница сама переходит на следующий поток; потока нет — нейтральный текст.
+     Руками дату здесь не вписывать. Сценарий: Marketing/scenarios/pk_funnel_entry.md, «Перед новым потоком». -->
+<!--#include virtual="/_pk/next/day_month" set="pk_day" --><!--#include virtual="/_pk/next/weekday" set="pk_wd" --><!--#include virtual="/_pk/next/time" set="pk_time" --><!--#include virtual="/_pk/next/start" set="pk_start" --><!--#include virtual="/_pk/next/end" set="pk_end" -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <base href="/coaching-as-a-business/">
 <link rel="canonical" href="https://iakuban.com/coaching-as-a-business/">
@@ -95,11 +100,33 @@ gtag('set','url_passthrough',true);
 gtag('set','ads_data_redaction',true);
 </script>
 <!-- CookieHub CMP (домен iakuban.com, код 57650153) — до всех остальных скриптов -->
-<script src="https://cdn.cookiehub.eu/c2/57650153.js"></script>
+<!-- С 10.10.2026 CookieHub грузится через наш домен: /cookiehub/ проксирует nginx landings к cdn.cookiehub.eu.
+ CDN CookieHub на Bunny, россиянам он иногда отдаёт узел Datacamp, который ТСПУ рвёт после 16 КБ:
+ баннера нет, GA4 и Метрика не стартуют. Не загрузился с нашего домена — запасной путь на CDN.
+ load() только через iakCookiehubStart: без CookieHub страница не падает (SEO/operations/2026-10-10_cookiehub_ru_delivery.md). -->
+<script src="/cookiehub/c2/57650153.js"></script>
+<script>
+(function(){
+ var CDN='https://cdn.cookiehub.eu',own=!!window.cookiehub,opts=null,done=false;
+ function fix(){
+  var h=window.__cookiehub,p=location.origin+'/cookiehub',k=['css','assets','dist','cdn'];
+  if(!own||!h)return;
+  for(var i=0;i<k.length;i++){if(typeof h[k[i]]==='string'&&h[k[i]].indexOf(CDN)===0)h[k[i]]=p+h[k[i]].slice(CDN.length);}
+ }
+ function go(){
+  var c=window.cookiehub;
+  if(done||!opts||!c||typeof c.load!=='function')return;
+  done=true;fix();
+  try{c.load(opts);}catch(e){}
+ }
+ window.iakCookiehubStart=function(o){opts=o||{};go();};
+ if(!own){var s=document.createElement('script');s.src=CDN+'/c2/57650153.js';s.onload=go;document.head.appendChild(s);}
+})();
+</script>
 <script type="text/javascript">
 document.addEventListener("DOMContentLoaded", function(event) {
  var cpm = {};
- window.cookiehub.load(cpm);
+ window.iakCookiehubStart(cpm);
 });
 </script>
 <!-- Google Analytics (GA4) G-Y2D060K2Z4 + Google Ads AW-17650633966 -->
@@ -193,7 +220,7 @@ gtag('config','AW-17650633966');
  "mainEntity": [
  {"@type":"Question","name":"Что такое сертификат CCE ICF?","acceptedAnswer":{"@type":"Answer","text":"Continuing Coach Education — часы обучения, признаваемые Международной федерацией коучинга (ICF). Программа даёт 10 часов CCE (7 Core Competencies, 3 Resource Development), они засчитываются при подаче на сертификации ACC и PCC."}},
  {"@type":"Question","name":"Чем «Профессия коуч» отличается от Level 1?","acceptedAnswer":{"@type":"Answer","text":"«Профессия коуч» — знакомство с профессией за один живой день. Level 1 — полная подготовка коуча за 3 месяца: 75 часов, менторинг, супервизия и первые платящие клиенты. Стоимость «Профессии коуч» засчитывается в цену Level 1."}},
- {"@type":"Question","name":"Сколько времени займёт участие?","acceptedAnswer":{"@type":"Answer","text":"Около 10 часов: видео-уроки в удобное время, тренинг-день в субботу с 10:00 до 17:00 МСК и личная сессия по договорённости."}},
+ {"@type":"Question","name":"Сколько времени займёт участие?","acceptedAnswer":{"@type":"Answer","text":"Около 10 часов: видео-уроки в удобное время, тренинг-день в субботу <!--#if expr="$pk_start" -->с <!--#echo var="pk_start" --> до <!--#echo var="pk_end" --> МСК<!--#else -->в Zoom<!--#endif --> и личная сессия по договорённости."}},
  {"@type":"Question","name":"Будет ли запись тренинга?","acceptedAnswer":{"@type":"Answer","text":"Запись теоретической части будет. Но сертификат выдаётся за живое участие в полном дне: практику в тройках и живую обратную связь записать нельзя."}},
  {"@type":"Question","name":"Когда ближайший поток?","acceptedAnswer":{"@type":"Answer","text":"Новый поток стартует каждый месяц, тренинг-день всегда в субботу. Напишите нам — назовём дату ближайшего потока и забронируем место."}},
  {"@type":"Question","name":"Я дипломированный психолог — как участвовать бесплатно?","acceptedAnswer":{"@type":"Answer","text":"Напишите нам в Telegram и приложите диплом о высшем психологическом образовании. После подтверждения мы запишем вас на ближайший поток бесплатно."}},
@@ -259,6 +286,9 @@ gtag('config','AW-17650633966');
  .sub b{color:#fff;font-weight:500}
  .cta-note{font-size:15px;line-height:1.5;color:var(--ink-soft);margin-top:20px}
  .cta-note b{color:#fff;font-weight:500}
+ .cta-date{display:inline-block;font-size:16px;line-height:1.5;color:#fff;margin-top:14px;padding:8px 14px;border:1px solid rgba(157,180,255,.45);border-radius:10px;background:rgba(157,180,255,.08)}
+ .cta-date[hidden]{display:none}
+ .cta-date b{font-weight:600}
  .cta-note a{color:#9DB4FF}
  .hero-accr{display:inline-flex;align-items:center;gap:12px;margin-top:28px;background:rgba(255,255,255,.05);
  border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 16px}
@@ -890,6 +920,7 @@ gtag('config','AW-17650633966');
  <p class="sub">Три коротких видео-урока, живой тренинг-день с Алексеем Якубаном и личная коуч-сессия. Вы попробуете профессию руками, проведёте настоящие сессии — и <b>получите право говорить о себе «я коуч»</b>.</p>
  <a class="btn btn-lg" href="https://t.me/iakuban_team?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B7%D0%B0%D0%BF%D0%B8%D1%81%D0%B0%D1%82%D1%8C%D1%81%D1%8F%20%D0%BD%D0%B0%20%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D1%83%20%C2%AB%D0%9F%D1%80%D0%BE%D1%84%D0%B5%D1%81%D1%81%D0%B8%D1%8F%20%D0%BA%D0%BE%D1%83%D1%87%C2%BB" target="_blank" rel="noopener">Занять место на потоке</a>
  <p class="cta-note">Участие — <b>300 €</b>. <a href="#pricing">Дипломированным психологам — бесплатно</a>.</p>
+ <!--#if expr="$pk_day" --><p class="cta-date">Ближайший тренинг-день: <b><!--#echo var="pk_wd" -->, <!--#echo var="pk_day" --></b>, <!--#echo var="pk_time" --> МСК, Zoom</p><!--#endif -->
  <div class="proof">
  <div class="proof-avatars">
  <img src="assets/mariyalanda.jpg" alt="" width="58" height="58">
@@ -1051,9 +1082,11 @@ gtag('config','AW-17650633966');
  <div class="wrap">
  <div class="schedule-head">
  <p class="sec-eyebrow">Как устроен тренинг-день</p>
- <h2 class="sec-title">Суббота, 10:00–17:00 МСК — по минутам</h2>
- <p class="schedule-sub">Новый поток стартует каждый месяц. Дату ближайшего тренинг-дня подскажем при записи.</p>
+ <h2 class="sec-title"><!--#if expr="$pk_time" -->Суббота, <!--#echo var="pk_time" --> МСК — по минутам<!--#else -->Тренинг-день по минутам, время московское<!--#endif --></h2>
+ <p class="schedule-sub"><!--#if expr="$pk_day" -->Ближайший тренинг-день — <!--#echo var="pk_wd" -->, <!--#echo var="pk_day" -->. Новый поток стартует каждый месяц.<!--#else -->Новый поток стартует каждый месяц. Дату ближайшего тренинг-дня подскажем при записи.<!--#endif --></p>
  </div>
+ <!-- Время в МСК: тренинг начинается в 9:00 по Мадриду — летом это 10:00 МСК, зимой 11:00 МСК. -->
+ <!--#if expr="$pk_start = /^10/" -->
  <div class="agenda">
  <div class="ag-col">
  <div class="ag-row"><span class="ag-time">10:00–10:20</span><span class="ag-what"><span class="t">Приветствие и настрой</span><span class="s">знакомство, ожидания, правила работы</span></span></div>
@@ -1068,6 +1101,22 @@ gtag('config','AW-17650633966');
  <div class="ag-row"><span class="ag-time">16:30–17:00</span><span class="ag-what"><span class="t">Как растёт практика коуча</span><span class="s">от первых сессий до первых платящих клиентов</span></span></div>
  </div>
  </div>
+ <!--#else -->
+ <div class="agenda">
+ <div class="ag-col">
+ <div class="ag-row"><span class="ag-time">11:00–11:20</span><span class="ag-what"><span class="t">Приветствие и настрой</span><span class="s">знакомство, ожидания, правила работы</span></span></div>
+ <div class="ag-row"><span class="ag-time">11:20–12:40</span><span class="ag-what"><span class="t">Мечта. Ценности. Миссия</span><span class="s">работа с вашим собственным запросом</span></span></div>
+ <div class="ag-row"><span class="ag-time">12:50–13:30</span><span class="ag-what"><span class="t">Структура коуч-сессии</span><span class="s">разбор и ответы на вопросы</span></span></div>
+ <div class="ag-row"><span class="ag-time">13:30–14:30</span><span class="ag-what"><span class="t">Перерыв на обед</span></span></div>
+ </div>
+ <div class="ag-col">
+ <div class="ag-row hl"><span class="ag-time">14:30–15:15</span><span class="ag-what"><span class="t">Демонстрационная сессия</span><span class="s">Алексей проводит настоящую сессию вживую</span></span></div>
+ <div class="ag-row hl"><span class="ag-time">15:15–16:30</span><span class="ag-what"><span class="t">Практика в тройках</span><span class="s">вы в ролях коуча, клиента и наблюдателя</span></span></div>
+ <div class="ag-row"><span class="ag-time">16:55–17:25</span><span class="ag-what"><span class="t">Пространство вариантов</span><span class="s">и празднование ошибок после практики</span></span></div>
+ <div class="ag-row"><span class="ag-time">17:30–18:00</span><span class="ag-what"><span class="t">Как растёт практика коуча</span><span class="s">от первых сессий до первых платящих клиентов</span></span></div>
+ </div>
+ </div>
+ <!--#endif -->
  <div class="cal-note">
  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#9DB4FF" stroke-width="1.8"/><path d="M12 7v5l3.2 2" stroke="#9DB4FF" stroke-width="1.8" stroke-linecap="round"/></svg>
  <span>Сертификат выдаётся за <b>живое участие в полном тренинг-дне</b>: запись теории будет, но практику в тройках и трансформацию записать нельзя. Видео-уроки открываются сразу после оплаты, личная сессия проходит после тренинга.</span>
@@ -1102,10 +1151,10 @@ gtag('config','AW-17650633966');
  </div>
  <div class="reviews-grid">
  <article class="rev">
- <q>После тренинга я <b>сделала продажу, используя ваш скрипт</b> продаж через коучинг. Мне он понравился — пора обновить свой.</q>
+ <q>Огромное спасибо Алексею и команде. Очень интересная, понятная подача материала! <b>У меня произошла сильная трансформация!</b> Каждый день себя спрашиваю — чего хочет моя душа!</q>
  <div class="who">
- <img src="assets/Volodina_Larisa.jpg" alt="Лариса Володина" width="52" height="52" loading="lazy">
- <div><div class="name">Лариса Володина</div><div class="role">психолог</div></div>
+ <img src="assets/Fuks_Marina.jpg" alt="Марина Фукс" width="52" height="52" loading="lazy">
+ <div><div class="name">Марина Фукс</div><div class="role">коуч</div></div>
  </div>
  </article>
  <article class="rev">
@@ -1116,7 +1165,7 @@ gtag('config','AW-17650633966');
  </div>
  </article>
  <article class="rev">
- <q>Кто тоже, как и я, остался в восторге и уже запросил информацию о Level 1 — поднимайте руки! <b>Большая сердечная благодарность</b> за такую невероятную возможность.</q>
+ <q>Кто тоже, как и я, остался в восторге и уже запросил информацию о Level I — поднимайте руки! <b>Большая сердечная благодарочка</b> за такую невероятную возможность.</q>
  <div class="who">
  <img src="assets/mariyalanda.jpg" alt="Мария Ланда" width="52" height="52" loading="lazy">
  <div><div class="name">Мария Ланда</div><div class="role">HR-специалист, коуч по профориентации</div></div>
@@ -1256,7 +1305,7 @@ gtag('config','AW-17650633966');
  </details>
  <details>
  <summary>Сколько времени займёт участие?</summary>
- <p>Около 10 часов, и почти все — в удобном вам ритме: видео-уроки смотрите когда удобно, личная сессия — по договорённости. Единственная фиксированная точка — <b>тренинг-день в субботу с 10:00 до 17:00 МСК</b>.</p>
+ <p>Около 10 часов, и почти все — в удобном вам ритме: видео-уроки смотрите когда удобно, личная сессия — по договорённости. Единственная фиксированная точка — <b>тренинг-день в субботу<!--#if expr="$pk_start" --> с <!--#echo var="pk_start" --> до <!--#echo var="pk_end" --> МСК<!--#endif --></b>.</p>
  </details>
  <details>
  <summary>Я не уверена, что справлюсь. Это для меня?</summary>
@@ -1276,7 +1325,7 @@ gtag('config','AW-17650633966');
  </details>
  <details>
  <summary>Когда ближайший поток?</summary>
- <p>Новый поток стартует каждый месяц, тренинг-день всегда в субботу. Напишите нам — назовём дату ближайшего потока и забронируем место.</p>
+ <p><!--#if expr="$pk_day" -->Ближайший тренинг-день — <!--#echo var="pk_wd" -->, <!--#echo var="pk_day" -->, <!--#echo var="pk_time" --> МСК. Новый поток стартует каждый месяц, тренинг-день всегда в субботу. Напишите нам — забронируем место.<!--#else -->Новый поток стартует каждый месяц, тренинг-день всегда в субботу. Напишите нам — назовём дату ближайшего потока и забронируем место.<!--#endif --></p>
  </details>
  <details>
  <summary>Я дипломированный психолог — как участвовать бесплатно?</summary>
